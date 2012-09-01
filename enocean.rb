@@ -153,6 +153,19 @@ module ESP3
 
     end
 
+    class Fourbs < Radio
+		
+		def self.rorg
+    		return 0xa5
+    	end
+
+    	def self.fromData(data, sender_id, status, optData = [])
+			array = [rorg] + data + sender_id + [status]
+			return Radio.fromData(array, optData)
+    	end
+
+    end
+
     class Ptm200
 
     	def initialize(sender_id)
@@ -163,6 +176,33 @@ module ESP3
     		return Rps.fromData(0x70, @sender_id, 0x30)
     	end
     	
+    	def down
+    		return Rps.fromData(0x50, @sender_id, 0x30)
+    	end
+
+    	def release
+    		return Rps.fromData(0x00, @sender_id, 0x20)
+    	end
+    end
+
+    class DirectTransfer
+
+    	def initialize(sender_id)
+			@sender_id = sender_id
+    	end
+
+    	def dim(value, speed)
+    		return Fourbs.fromData([0x02, value, speed, 0x09], @sender_id, 0x30)
+    	end
+
+    	def off
+			return Fourbs.fromData([0x02, 0x00, 0x00, 0x08], @sender_id, 0x30)
+    	end
+    	
+    	def teach
+			return Fourbs.fromData([0x02, 0x00, 0x00, 0x00], @sender_id, 0x30)
+    	end
+
     end
 
     class Gateway

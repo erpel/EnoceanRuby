@@ -10,7 +10,15 @@ require 'json'
 
 require_relative "enocean"
 
-module SocketClient
+class SocketClient < EM::Connection
+  #include EM::Protocols::LineText2
+
+
+  def initialize(sp)
+    @serial = sp
+    @jsonLevel = 0
+  end
+
   def self.list
     @list ||= []
   end
@@ -19,10 +27,22 @@ module SocketClient
     SocketClient.list << self
     @db = SQLite3::Database.new( "database" )
 
-    values = []
-    @db.execute("SELECT * FROM Devices") do |row|
-      values << {row[0] => row[1]} #id => value
+    values = Hash.new
+    dimmerStates = Hash.new
+    @db.execute("SELECT * FROM DimmerStates") do |row|
+      dimmerStates[row[0]] = row[2] #id => value
     end
+    values["DimmerStates"] = dimmerStates
+    ptm330States = Hash.new
+    @db.execute("SELECT * FROM PTM330States") do |row|
+      ptm330States[row[0]] = row[1] #id => value
+    end
+    values["PTM330States"] = ptm330States
+    temperatures = Hash.new
+    @db.execute("SELECT * FROM Temperatures") do |row|
+      temperatures[row[0]] = row[1] #id => value
+    end
+    values["Temperatures"] = temperatures
     self.send_data "#{values.to_json}\n"
 
     p "Client connected"
@@ -36,141 +56,140 @@ module SocketClient
 
   def receive_data data
     p data
+
+    jsonArray = []
+
+    data.each_char { |chr| 
+      if chr == "{"
+        if @jsonLevel == 0
+          @buf = ""
+        end
+        @jsonLevel += 1
+        @buf << chr
+      elsif chr == "}"
+        @jsonLevel -= 1
+        @buf << chr
+        if @jsonLevel == 0
+          cmnd = JSON.parse(@buf)
+          spkt = []
+
+          if cmnd["Device"] == "Dimmer"
+            if cmnd["Sender"] == "PTM200"
+              bathroomRocker = ESP3::Ptm200.new([0xFF, 0xCA, 0xF7, 0x00])
+              if cmnd["Action"] == "Up"
+                spkt = bathroomRocker.up.serialize
+              elsif cmnd["Action"] == "Down"
+                spkt = bathroomRocker.down.serialize
+              elsif cmnd["Action"] == "Release"
+                spkt = bathroomRocker.release.serialize
+              end
+            elsif cmnd["Sender"] == "Direct"
+              bathroomDirect = ESP3::DirectTransfer.new([0xFF, 0xCA, 0xF7, 0x01])
+              if cmnd["Action"] == "Dim"
+                spkt = bathroomDirect.dim(cmnd["Value"], cmnd["Speed"]).serialize
+              elsif cmnd["Action"] == "Off"
+                spkt = bathroomDirect.off.serialize
+              elsif cmnd["Action"] == "Teach"
+                spkt = bathroomDirect.teach.serialize
+              end
+            end        
+          elsif cmnd["Device"] == "Blinds"
+            if cmnd["Sender"] == "PTM200"
+              blindsRocker = ESP3::Ptm200.new([0xFF, 0xCA, 0xF7, 0x02])
+              if cmnd["Action"] == "Up"
+                spkt = blindsRocker.up.serialize
+              elsif cmnd["Action"] == "Down"
+                spkt = blindsRocker.down.serialize
+              elsif cmnd["Action"] == "Release"
+                spkt = blindsRocker.release.serialize
+              end
+            end
+          end
+          #Send with serialport!!
+          @serial.puts spkt.pack("C*")
+        end
+      else
+        @buf << chr
+      end
+    }
     #How do i send via serialport from here??? serial.send_data data
-    $serial.send_data data
+    #bathroomRocker = ESP3::Ptm200.new([0xFF, 0xCA, 0xF7, 0x00])
   end
 end
 
-db = SQLite3::Database.new( "database" )
-$serial = SerialPort.new("/dev/tty.usbserial-FTVBI8RQ", 57600)
 
-Thread.new do
-  loop { 
-    byte = $serial.getbyte
 
+EM.run{
+  #@channel = EM::Channel.new
+  @serial = SerialPort.new("/dev/tty.usbserial-FTVBI8RQ", 57600)
+  EM.start_server '0.0.0.0', 8081, SocketClient, @serial
+
+  EM::defer do
+    @db = SQLite3::Database.new( "database" )
+    loop do 
+      byte = @serial.getbyte
 
       if byte == 0x55
 
-        header = Array.new(4) { |b| b = $serial.getbyte }
+        header = Array.new(4) { |b| b = @serial.getbyte }
 
-        header_crc = $serial.getbyte
+        header_crc = @serial.getbyte
 
         if header_crc == crc8(header)
 
           data_length = (header[0] << 8) | header[1]
-          data = Array.new(data_length) { |b| b = $serial.getbyte }
+          data = Array.new(data_length) { |b| b = @serial.getbyte }
 
           optional_data_length = header[2]
-          optional_data = Array.new(optional_data_length) { |b| b = $serial.getbyte }
+          optional_data = Array.new(optional_data_length) { |b| b = @serial.getbyte }
 
           packet_type = header[3]
 
-          data_crc = $serial.getbyte
+          data_crc = @serial.getbyte
 
           if data_crc == crc8(data + optional_data)
             packet = ESP3::BasePacket.factory(packet_type, data, optional_data)
-          end
-        end
-      end
-  }
-end
-#readstate = 0
-#buffer = Hash.new
-
-EM.run{
-  EM.start_server '0.0.0.0', 8081, SocketClient
-=begin
-  $serial = EM.open_serial '/dev/tty.usbserial-FTVBI8RQ', 57600, 8, 1, 0
-
-  $serial.on_data do |data|
-    #Parse data into an array called values
-    #db.execute("UPDATE values SET value = ? WHERE id = ?", values["value"], values["id"])
-
-    data.each_byte { |byte|  
-          if (readstate == 0) && (byte == 0x55)
-            #Got Sync Byte
-            readstate = 1
-            next
-
-          elsif readstate == 1
-            buffer["highDataLength"] = byte
-            readstate = 2
-            next
-
-          elsif readstate == 2
-            buffer["lowDataLength"] = byte
-            buffer["dataLength"] = (buffer["highDataLength"] << 8) | buffer["lowDataLength"]
-            readstate = 3
-            next
-
-          elsif readstate == 3
-            buffer["optionalLength"] = byte
-            readstate = 4
-            next
-
-          elsif readstate == 4
-            buffer["packetType"] = byte
-            readstate = 5
-            next
-
-          elsif readstate == 5
-            if byte == crc8([buffer["highDataLength"], buffer["lowDataLength"], buffer["optionalLength"], buffer["packetType"]])
-              readstate = 6
-            else
-              readstate = 0
-              buffer.clear
-            end
-            next
-
-          elsif readstate == 6
-
-
-          end
-        }
-
-        if data.getbyte(0) == 0x55
-          crc = data.getbyte(5)
-          header = data.unpack("xnCC")
-          if crc == crc8(header)
-            dataLength, optionalLength, packetType = header
-            msgData = data.unpack("x6C#{dataLength}") #[6..6+dataLength].unpack("sC*")
-            msgOptional = data.unpack("x#{6+dataLength}C#{optionalLength}")#data[7+dataLength..7+dataLength+optionalLength].unpack("C*")
-            crc = data.getbyte(6+dataLength+optionalLength)
-            if crc == crc8(msgData+msgOptional)
-              packet = ESP3::BasePacket.factory(packetType, msgData, msgOptional)
-              p packet.senderId
+            p packet
+            if packet.class.typeId == 0x01
               begin
                deviceType = 0
-               db.execute("SELECT TypeId FROM Devices WHERE id = ?", packet.senderId) do |row|
+               @db.execute("SELECT TypeId FROM Devices WHERE id = ?", packet.senderId) do |row|
                  deviceType = row[0]
                end
                if deviceType == 3
                  state = packet.datadata.first == 0x10 ? 1 : 0
-                 db.execute("UPDATE PTM330States SET Up = ? WHERE Id = ?", state,packet.senderId)
+                 @db.execute("UPDATE PTM330States SET Up = ? WHERE Id = ?", state, packet.senderId)
                elsif deviceType == 2
                  if packet.rorg == 0x05
                   state = packet.datadata.first == 0x70 ? 1 : 0
-                  db.execute("UPDATE DimmerStates SET LightsOn = ? WHERE Id = ?", state, packet.senderId)
+                  @db.execute("UPDATE DimmerStates SET LightsOn = ? WHERE Id = ?", state, packet.senderId)
                   puts "#{packet.senderId}: #{state}"
                 elsif packet.rorg == 0xA5
                   value = packet.datadata[1]
                   state = packet.datadata.last == 0x09 ? 1 : 0
-                  db.execute("UPDATE DimmerStates SET LightsOn = ?,DimValue = ?  WHERE Id = ?", state, value,packet.senderId)
+                  @db.execute("UPDATE DimmerStates SET LightsOn = ?,DimValue = ? WHERE Id = ?", state, value, packet.senderId)
                   puts "#{packet.senderId}: #{state}, #{value}"
                 end
+              elsif deviceType == 4
+                temp = packet.datadata[2]
+                @db.execute("UPDATE Temperatures SET temperature = ? WHERE Id = ?", temp, packet.senderId)
+
+                t = 40.0 - ((40.0 /255.0)*temp)
+                p "Temperature is #{t}"
+
+                values = {"Temperatures" => {packet.senderId => temp}}
+
+                SocketClient.list.each{ |c| c.send_data "#{values.to_json}\n" }
               end
 
             rescue Exception => e
-             puts e
-           end
-         end
-
-       end
-     end
-
-     SocketClient.list.each{ |c| c.send_data "#{data}\n" }
-   end
-=end
+              puts e
+            end
+          end
+        end
+      end
+    end
+  end
+  @db.close
+end
 }
-
- db.close
