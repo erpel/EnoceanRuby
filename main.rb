@@ -121,7 +121,7 @@ end
 
 EM.run{
   #@channel = EM::Channel.new
-  @serial = SerialPort.new("/dev/tty.usbserial-FTVBI8RQ", 57600)
+  @serial = SerialPort.new("/dev/ttyUSB0", 57600)
   EM.start_server '0.0.0.0', 8081, SocketClient, @serial
 
   EM::defer do
