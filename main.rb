@@ -13,7 +13,6 @@ require_relative "enocean"
 class SocketClient < EM::Connection
   #include EM::Protocols::LineText2
 
-
   def initialize(sp)
     @serial = sp
     @jsonLevel = 0
