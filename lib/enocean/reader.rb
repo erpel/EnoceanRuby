@@ -26,7 +26,11 @@ module Enocean
 
           if data_crc == crc8(data + optional_data)
             packet = Esp3::BasePacket.factory(packet_type, data, optional_data)
+          else
+            puts "Invalid CRC8 for Data"
           end
+        else
+          puts "Invalid CRC8 for header"
         end
       end
       packet

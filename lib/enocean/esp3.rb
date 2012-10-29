@@ -3,46 +3,38 @@ module Enocean
   module Esp3
 
     class BasePacket
-      def initialize(pktType, data, optData = [])
-        @pktType = pktType
+      attr_reader :data, :optional_data, :packet_type
+      def initialize(packet_type, data, optional_data = [])
+        @packet_type = packet_type
         @data = data
-        @optData = optData
+        @optional_data = optional_data
         initFromData
       end
 
       def initFromData()
       end
 
-      def self.fromData(data = [], optData = [])
-        return self.new(typeId, data, optData)
+      def self.fromData(data = [], optional_data = [])
+        return self.new(typeId, data, optional_data)
       end
 
       def header
-        header = ([@data.count, @optData.count, @pktType].pack("nCC")).unpack("C*")
+        header = ([@data.count, @optional_data.count, @packet_type].pack("nCC")).unpack("C*")
         header << crc8(header)
         header.insert(0 , 0x55)
         return header
       end
 
       def serialize
-        pkt = self.header
-
-        if @data.count > 0
-          pkt = pkt + @data
-        end
-        if @optData.count > 0
-          pkt = pkt + @optData
-        end
-
-        pkt << crc8(@data + @optData)
-
-        return pkt
+        pkt = self.header + @data + @optional_data
+        pkt << crc8(@data + @optional_data)
+        pkt
       end
 
       def printBaseInfo
-        s = "\nESP3 packet type: 0x%02x (%s)\n" % [@pktType, self.class]
+        s = "\nESP3 packet type: 0x%02x (%s)\n" % [@packet_type, self.class]
         s += "Data length     : %d\n" % @data.length
-        s += "Opt. data length: %d\n" % @optData.length
+        s += "Opt. data length: %d\n" % @optional_data.length
         return s
       end
 
@@ -54,16 +46,16 @@ module Enocean
         return self.printBaseInfo + self.printContent
       end
 
-      def self.factory(pktType, data, optData)
+      def self.factory(packet_type, data, optional_data)
 
-        if pktType == Radio.typeId
-          return Radio.fromData(data, optData)
-        elsif pktType == Response.typeId
-          return Response.fromData(data,  optData)
+        if packet_type == Radio.typeId
+          return Radio.fromData(data, optional_data)
+        elsif packet_type == Response.typeId
+          return Response.fromData(data,  optional_data)
         else
               # add all other packet type
                 # fall back for unknown packets
-                return BasePacket.new(pktType,  data,  optData)
+                return BasePacket.new(packet_type,  data,  optional_data)
               end
           end
       end
@@ -78,7 +70,7 @@ module Enocean
         @datadata = @data[1..-6]
         @senderId = @data[-5..-2].pack("C*").unpack("N").first
         @status = @data[-1]
-            @subTelNum,  @destId,  @dBm,  @securityLevel = @optData.pack("C*").unpack("BNBB") #struct.unpack('>BIBB',  str(self.optData))
+            @subTelNum,  @destId,  @dBm,  @securityLevel = @optional_data.pack("C*").unpack("BNBB") #struct.unpack('>BIBB',  str(self.optional_data))
             @repeatCount = @status & 0x0F
             # T21 and NU flags as tuple
             @flags = {:t21 => (@status >> 5) & 0x01, :nu => (@status >> 4) & 0x01 }
@@ -88,8 +80,8 @@ module Enocean
           return 0x01
         end
 
-        def self.fromData(data = [], optData = [])
-          return self.new(typeId, data, optData)
+        def self.fromData(data = [], optional_data = [])
+          return self.new(typeId, data, optional_data)
         end
 
         def printContent
@@ -102,7 +94,7 @@ module Enocean
   Status          : 0x#{@status.to_s(16)}
   **** Optional Data ****
   EOT
-        if @optData.count > 0
+        if @optional_data.count > 0
             #s +=  'SubTelNum       : {0:d}\n'.format(self.subTelNum)
             #s +=  'Destination ID: 0x{0:08x}\n'.format(self.destId)
             #s +=  'dBm             : {0:d}\n'.format(self.dBm)
@@ -122,8 +114,8 @@ module Enocean
         end
 
 
-        def self.fromData(data = [], optData = [])
-          return self.new(typeId, data, optData)
+        def self.fromData(data = [], optional_data = [])
+          return self.new(typeId, data, optional_data)
         end
 
       end
@@ -134,9 +126,9 @@ module Enocean
           return 0x05
         end
 
-        def self.withCommand(cmd, data = [], optData = [])
+        def self.withCommand(cmd, data = [], optional_data = [])
           data.insert(0, cmd)
-          return self.new(typeId, data, optData)
+          return self.new(typeId, data, optional_data)
         end
       end
     
@@ -152,9 +144,9 @@ module Enocean
           return 0xf6
         end
 
-        def self.fromData(data, sender_id, status, optData = [])
+        def self.fromData(data, sender_id, status, optional_data = [])
         array = [rorg, data] + sender_id + [status]
-        return Radio.fromData(array, optData)
+        return Radio.fromData(array, optional_data)
         end
 
       end
@@ -165,9 +157,9 @@ module Enocean
           return 0xa5
         end
 
-        def self.fromData(data, sender_id, status, optData = [])
+        def self.fromData(data, sender_id, status, optional_data = [])
         array = [rorg] + data + sender_id + [status]
-        return Radio.fromData(array, optData)
+        return Radio.fromData(array, optional_data)
         end
 
       end
