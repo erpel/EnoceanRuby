@@ -70,7 +70,8 @@ module ESP3
             end
         end
     end
-
+    
+    
     class Radio < BasePacket
     
     attr_accessor :senderId, :data, :datadata, :rorg
@@ -95,21 +96,24 @@ module ESP3
       end
 
       def printContent
-        s = "**** Data ****\n"  
-          s += "Choice          : 0x#{@rorg.to_s(16)}\n"
-          s += "Data            : 0x#{@datadata.join("-")}\n"           
-          s += "Sender ID       : 0x#{@senderId.to_s(16)}\n"
-          s += "Status          : 0x#{@status.to_s(16)}\n"
-          s += "**** Optional Data ****\n"
-          if @optData.count > 0
-              #s +=  'SubTelNum       : {0:d}\n'.format(self.subTelNum)
-              #s +=  'Destination ID: 0x{0:08x}\n'.format(self.destId)
-              #s +=  'dBm             : {0:d}\n'.format(self.dBm)
-              #s +=  'Security Level  : {0:d}\n'.format(self.SecurityLevel)
-          else
-              #s +=  'None\n'
-          end
-          return s
+        s =<<-EOT
+**** Received at: #{Time.now} ******
+**** Data ****
+Choice          : 0x#{@rorg.to_s(16)}
+Data            : 0x#{@datadata.join("-")}
+Sender ID       : 0x#{@senderId.to_s(16)}
+Status          : 0x#{@status.to_s(16)}
+**** Optional Data ****
+EOT
+      if @optData.count > 0
+          #s +=  'SubTelNum       : {0:d}\n'.format(self.subTelNum)
+          #s +=  'Destination ID: 0x{0:08x}\n'.format(self.destId)
+          #s +=  'dBm             : {0:d}\n'.format(self.dBm)
+          #s +=  'Security Level  : {0:d}\n'.format(self.SecurityLevel)
+      else
+          #s +=  'None\n'
+      end
+      return s
     end
 
     end
@@ -137,9 +141,14 @@ module ESP3
         data.insert(0, cmd)
         return self.new(typeId, data, optData)
       end
-
     end
-
+    
+    class ReadIdBase < CommonCommand
+      def self.create
+        withCommand(0x08)
+      end
+    end
+    
     class Rps < Radio
     
     def self.rorg

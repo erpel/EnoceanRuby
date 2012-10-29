@@ -127,7 +127,6 @@ EM.run{
     @db = SQLite3::Database.new( "database" )
     loop do 
       byte = @serial.getbyte
-
       if byte == 0x55
 
         header = Array.new(4) { |b| b = @serial.getbyte }
