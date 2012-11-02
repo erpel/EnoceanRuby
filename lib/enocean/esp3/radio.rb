@@ -3,7 +3,7 @@ module Enocean
   module Esp3
     class Radio < BasePacket
   
-      attr_accessor :sender_id, :radio_data, :rorg
+      attr_accessor :sender_id, :radio_data, :rorg, :flags
 
       def init_from_data
         @rorg = @data[0]
@@ -43,6 +43,47 @@ EOT
             #s +=  'None\n'
         end
         return s
+      end
+    end
+    
+    class Rps 
+      extend Forwardable
+      def_delegator :@packet, :sender_id, :sender_id
+      attr_reader :packet
+
+      def initialize(packet)
+        @packet = packet
+      end
+      
+      def rps_data
+        radio_data.first
+      end
+      
+      def self.factory(packet)
+        if (packet.rorg == 0xf6)
+          PTM200.new(packet)
+        end
+      end
+    end
+    
+    class PTM200 < Rps
+      def initialize(packet)
+        super
+        @buttons = [ :a1, :a0, :b1, :b0 ]
+      end
+      def action1
+        @buttons[packet.radio_data >> 5]
+      end
+      def action2
+        @buttons[(packet.radio_data >> 1) & 0b111] 
+      end
+      
+      def to_s
+        if packet.flags[:nu] && packet.flags[:t21]
+          "Rocker@#{sender_id}: Action1 #{action1} , Action2: #{action2}" 
+        else
+          "Rocker@#{sender_id}: released (#{packet.radio_data})"
+        end
       end
     end
   end
