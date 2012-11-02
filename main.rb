@@ -148,7 +148,7 @@ EM.run{
           if data_crc == crc8(data + optional_data)
             packet = ESP3::BasePacket.factory(packet_type, data, optional_data)
             p packet
-            if packet.class.typeId == 0x01
+            if packet.class.type_id == 0x01
               begin
                deviceType = 0
                @db.execute("SELECT TypeId FROM Devices WHERE id = ?", packet.senderId) do |row|

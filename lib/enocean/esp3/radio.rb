@@ -16,12 +16,12 @@ module Enocean
           @flags = {:t21 => (@status >> 5) & 0x01, :nu => (@status >> 4) & 0x01 }
     end
 
-      def self.typeId
+      def self.type_id
         return 0x01
       end
 
       def self.fromData(data = [], optional_data = [])
-        return self.new(typeId, data, optional_data)
+        return self.new(type_id, data, optional_data)
       end
 
       def printContent

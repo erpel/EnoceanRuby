@@ -9,53 +9,48 @@ module Enocean
         initFromData
       end
 
-      def initFromData()
+      def initFromData
       end
-
+      
       def self.fromData(data = [], optional_data = [])
-        return self.new(typeId, data, optional_data)
+        return self.new(type_id, data, optional_data)
       end
 
       def header
-        header = ([@data.count, @optional_data.count, @packet_type].pack("nCC")).unpack("C*")
-        header << crc8(header)
-        header.insert(0 , 0x55)
-        return header
+        [@data.count, @optional_data.count, @packet_type].pack("nCC").unpack("C*")
       end
 
+      # see Enocean Serial Protocol, section 1.6.1 Packet description
       def serialize
-        pkt = self.header + @data + @optional_data
-        pkt << crc8(@data + @optional_data)
-        pkt
+        [ 0x55 ] + self.header + [ crc8(header) ] + @data + @optional_data + [ crc8(@data + @optional_data) ]
       end
 
-      def printBaseInfo
+      def base_info
         s = "\nESP3 packet type: 0x%02x (%s)\n" % [@packet_type, self.class]
         s += "Data length     : %d\n" % @data.length
         s += "Opt. data length: %d\n" % @optional_data.length
-        return s
+        s
       end
 
-      def printContent
-        return ""
+      def content
+        ""
       end
 
       def to_s
-        return self.printBaseInfo + self.printContent
+        return base_info + content
       end
 
       def self.factory(packet_type, data, optional_data)
 
-        if packet_type == Radio.typeId
+        if packet_type == Radio.type_id
           return Radio.fromData(data, optional_data)
-        elsif packet_type == Response.typeId
+        elsif packet_type == Response.type_id
           return Response.fromData(data,  optional_data)
         else
-              # add all other packet type
-                # fall back for unknown packets
-                return BasePacket.new(packet_type,  data,  optional_data)
-              end
-          end
+          # add all other packet type
+          # fall back for unknown packets
+          return BasePacket.new(packet_type,  data,  optional_data)
+        end
       end
     end
   end

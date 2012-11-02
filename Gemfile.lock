@@ -20,5 +20,6 @@ PLATFORMS
 DEPENDENCIES
   eventmachine
   rspec
+  rspec-core
   serialport
   sqlite3

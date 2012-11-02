@@ -131,7 +131,7 @@ module Enocean
             if pkt
               begin
                 # try to get queue for packet
-                queues[pkt.class.typeId] << pkt
+                queues[pkt.class.type_id] << pkt
                 puts 'Packet on specific queue'
               rescue
                 queues['default'] << pkt
