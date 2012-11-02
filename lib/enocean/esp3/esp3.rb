@@ -8,9 +8,9 @@ module Enocean
           return 0xf6
         end
 
-        def self.fromData(data, sender_id, status, optional_data = [])
+        def self.from_data(data, sender_id, status, optional_data = [])
         array = [rorg, data] + sender_id + [status]
-        return Radio.fromData(array, optional_data)
+        return Radio.from_data(array, optional_data)
         end
 
       end
@@ -21,9 +21,9 @@ module Enocean
           return 0xa5
         end
 
-        def self.fromData(data, sender_id, status, optional_data = [])
+        def self.from_data(data, sender_id, status, optional_data = [])
         array = [rorg] + data + sender_id + [status]
-        return Radio.fromData(array, optional_data)
+        return Radio.from_data(array, optional_data)
         end
 
       end
@@ -35,15 +35,15 @@ module Enocean
         end
 
         def up
-          return Rps.fromData(0x70, @sender_id, 0x30)
+          return Rps.from_data(0x70, @sender_id, 0x30)
         end
       
         def down
-          return Rps.fromData(0x50, @sender_id, 0x30)
+          return Rps.from_data(0x50, @sender_id, 0x30)
         end
 
         def release
-          return Rps.fromData(0x00, @sender_id, 0x20)
+          return Rps.from_data(0x00, @sender_id, 0x20)
         end
       end
 
@@ -54,15 +54,15 @@ module Enocean
         end
 
         def dim(value, speed)
-          return Fourbs.fromData([0x02, value, speed, 0x09], @sender_id, 0x30)
+          return Fourbs.from_data([0x02, value, speed, 0x09], @sender_id, 0x30)
         end
 
         def off
-        return Fourbs.fromData([0x02, 0x00, 0x00, 0x08], @sender_id, 0x30)
+        return Fourbs.from_data([0x02, 0x00, 0x00, 0x08], @sender_id, 0x30)
         end
       
         def teach
-        return Fourbs.fromData([0x02, 0x00, 0x00, 0x00], @sender_id, 0x30)
+        return Fourbs.from_data([0x02, 0x00, 0x00, 0x00], @sender_id, 0x30)
         end
 
       end

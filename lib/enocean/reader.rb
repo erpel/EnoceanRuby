@@ -1,7 +1,7 @@
 module Enocean
-  class InvalidHeader < Exception
+  class InvalidHeader < RuntimeError
   end
-  class InvalidData < Exception
+  class InvalidData < RuntimeError
   end
   
   class Reader

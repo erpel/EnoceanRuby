@@ -6,13 +6,13 @@ module Enocean
         @packet_type = packet_type
         @data = data
         @optional_data = optional_data
-        initFromData
+        init_from_data
       end
 
-      def initFromData
+      def init_from_data
       end
       
-      def self.fromData(data = [], optional_data = [])
+      def self.from_data(data = [], optional_data = [])
         return self.new(type_id, data, optional_data)
       end
 
@@ -43,9 +43,9 @@ module Enocean
       def self.factory(packet_type, data, optional_data)
 
         if packet_type == Radio.type_id
-          return Radio.fromData(data, optional_data)
+          return Radio.from_data(data, optional_data)
         elsif packet_type == Response.type_id
-          return Response.fromData(data,  optional_data)
+          return Response.from_data(data,  optional_data)
         else
           # add all other packet type
           # fall back for unknown packets
