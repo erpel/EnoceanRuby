@@ -24,6 +24,9 @@ module Enocean
       def base_id
         data[1,4]
       end
+      def self.factory(packet_type, data, optional_data)
+        self.from_data(data)
+      end
     end
   end
 end

@@ -1,10 +1,15 @@
 module Enocean
+  class InvalidHeader < Exception
+  end
+  class InvalidData < Exception
+  end
+  
   class Reader
     def initialize(serial)
       @serial = serial
     end
     
-    def read_packet
+    def read_packet(packet_factory = Esp3::BasePacket)
       byte = @serial.getbyte
       
       packet = nil
@@ -25,12 +30,12 @@ module Enocean
           data_crc = @serial.getbyte
 
           if data_crc == crc8(data + optional_data)
-            packet = Esp3::BasePacket.factory(packet_type, data, optional_data)
+            packet = packet_factory.send(:factory, packet_type, data, optional_data)
           else
-            puts "Invalid CRC8 for Data"
+            raise InvalidData.new "Invalid CRC8 for Data"
           end
         else
-          puts "Invalid CRC8 for header"
+          raise InvalidHeader.new "Invalid CRC8 for Header"
         end
       end
       packet
