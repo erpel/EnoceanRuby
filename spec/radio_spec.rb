@@ -7,7 +7,7 @@ describe Enocean::Esp3::Radio do
       radio = double("Enocean::Esp3::Radio")
       radio.stub!(:sender_id) { 0xffeeddcc }
       radio.stub!(:flags) { { :nu => 1, :t21 => 1 } }
-      radio.stub!(:radio_data) { 0b00100000 }
+      radio.stub!(:radio_data) { [ 0b00100000 ] }
       radio.stub!(:rorg) { 0xf6 }
       radio
     end

@@ -56,7 +56,7 @@ EOT
       end
       
       def rps_data
-        radio_data.first
+        packet.radio_data.first
       end
       
       def self.factory(packet)
@@ -72,10 +72,10 @@ EOT
         @buttons = [ :a1, :a0, :b1, :b0 ]
       end
       def action1
-        @buttons[packet.radio_data >> 5]
+        @buttons[rps_data >> 5]
       end
       def action2
-        @buttons[(packet.radio_data >> 1) & 0b111] 
+        @buttons[(rps_data >> 1) & 0b111] 
       end
       
       def to_s
