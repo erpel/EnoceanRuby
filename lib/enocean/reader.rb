@@ -30,7 +30,7 @@ module Enocean
           data_crc = @serial.getbyte
 
           if data_crc == crc8(data + optional_data)
-            packet = packet_factory.send(:factory, packet_type, data, optional_data)
+            packet = Esp3::BasePacket.from_data(packet_type, data, optional_data)
           else
             raise InvalidData.new "Invalid CRC8 for Data"
           end
