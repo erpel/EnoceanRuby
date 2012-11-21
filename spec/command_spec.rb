@@ -12,7 +12,7 @@ describe Enocean::Esp3::CommonCommand do
     end
     
     describe "response" do
-      let(:response) { Enocean::Esp3::ReadIdBaseResponse.from_data(0x05, [0x0, 0xff, 0x0, 0x1, 0x2]) }
+      let(:response) { Enocean::Esp3::Response.from_data([0x0, 0xff, 0x0, 0x1, 0x2]).as_read_id_response }
       it "should parse the correct response " do
         response.should be_ok
         response.base_id.should == [0xff, 0x0, 0x1, 0x2]

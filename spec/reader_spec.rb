@@ -8,7 +8,7 @@ describe Enocean::Reader do
     serial
   end
   describe "Read base ID response" do
-    let(:response) { serialized_packet( [ 0x00, 0x05, 0x00, 0x05 ], [0x02, 0xff, 0x12, 0x13, 0x14 ])}
+    let(:response) { serialized_packet( [ 0x00, 0x05, 0x00, 0x02 ], [0x02, 0xff, 0x12, 0x13, 0x14 ])}
   
     it "should read a response package" do
       reader = Enocean::Reader.new(serial)
@@ -19,7 +19,8 @@ describe Enocean::Reader do
     it "should create a read base id response package" do
       reader = Enocean::Reader.new(serial)
       packet = reader.read_packet
-      packet = Enocean::Esp3::ReadIdBaseResponse.from_packet(packet)
+      packet.should be_instance_of(Enocean::Esp3::Response)
+      packet = packet.as_read_id_response
       packet.base_id.should == [ 0xff, 0x12, 0x13, 0x14 ]
     end
   end
