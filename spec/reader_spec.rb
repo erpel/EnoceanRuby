@@ -13,14 +13,14 @@ describe Enocean::Reader do
     it "should read a response package" do
       reader = Enocean::Reader.new(serial)
       packet = reader.read_packet
-      packet.should_not be_nil
+      packet.should be_instance_of(Enocean::Esp3::Response)
     end
     
     it "should create a read base id response package" do
       reader = Enocean::Reader.new(serial)
       packet = reader.read_packet
-      packet.should be_instance_of(Enocean::Esp3::Response)
       packet = packet.as_read_id_response
+      packet.should be_kind_of(ReadIdBaseResponse)
       packet.base_id.should == [ 0xff, 0x12, 0x13, 0x14 ]
     end
   end

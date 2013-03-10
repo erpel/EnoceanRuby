@@ -18,8 +18,9 @@ describe Enocean::Esp3::Rps do
     
     
     it "should create a valid PTM200 package out of radio data" do
-      packet = PTM200.from_data(a0_pressed_data, [])
+      packet = Rps.from_data(a0_pressed_data, [])
       packet.should_not be_nil
+      packet.as_ptm200
       packet.action1.should == :a0
       packet.to_s.should_not be_nil
     end
@@ -27,8 +28,9 @@ describe Enocean::Esp3::Rps do
     it "should create a valid PTM200 package via the factory from the data" do
       packet = PacketFactory.from_data(Radio.packet_type, a0_pressed_data, [])
       packet.should be_instance_of(Rps)
-      packet = PTM200.from_packet(packet)
-      packet.should be_instance_of(PTM200)
+      packet = packet.as_ptm200
+      debugger
+      packet.should be_kind_of(PTM200)
     end
     
     it "should construct a PTM200 package " do
