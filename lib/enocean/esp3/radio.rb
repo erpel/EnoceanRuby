@@ -27,7 +27,7 @@ module Enocean
           0x01
         end
  
-        def from_data(data, optional_data)
+        def from_data(data, optional_data = [])
           result = self.new(data, optional_data)
           result.parse_data
           result

@@ -29,7 +29,6 @@ describe Enocean::Esp3::Rps do
       packet = PacketFactory.from_data(Radio.packet_type, a0_pressed_data, [])
       packet.should be_instance_of(Rps)
       packet = packet.as_ptm200
-      debugger
       packet.should be_kind_of(PTM200)
     end
     
