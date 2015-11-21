@@ -11,27 +11,23 @@ require 'byebug'
 class Switch
   def initialize(writer, sender_id)
     @writer = writer
-    @b1_on = Enocean::Esp3::Rps.create
-    @b1_on.as_ptm200
+    @b1_on = Enocean::Esp3::Rps.new
     @b1_on.sender_id = sender_id
-    @b1_on.action1(:b1)
+    @b1_on.action1 = :b1
     @b1_on.build_data
 
-    @b1_off = Enocean::Esp3::Rps.create
-    @b1_off.as_ptm200
+    @b1_off = Enocean::Esp3::Rps.new
     @b1_off.sender_id = sender_id
-    @b1_off.build_data(0)
+    @b1_off.build_data
 
-    @b0_on = Enocean::Esp3::Rps.create
-    @b0_on.as_ptm200
+    @b0_on = Enocean::Esp3::Rps.new
     @b0_on.sender_id = sender_id
-    @b0_on.action1(:b0)
+    @b0_on.action1 = :b0
     @b0_on.build_data
 
-    @b0_off = Enocean::Esp3::Rps.create
-    @b0_off.as_ptm200
+    @b0_off = Enocean::Esp3::Rps.new
     @b0_off.sender_id = sender_id
-    @b0_off.build_data(0)
+    @b0_off.build_data
   end
 
   def on

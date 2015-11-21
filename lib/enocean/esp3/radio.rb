@@ -22,17 +22,23 @@ module Enocean
           if data[0] == Rps.rorg
             result = Rps.from_data(data, optional_data)
           elsif data[0] == FourBS.rorg
-            result = FourBS.from_Data(data, optional_data) 
+            result = FourBS.from_data(data, optional_data) 
           end
           result
         end
 
       end  
 
-      attr_accessor :sender_id, :radio_data, :rorg, :flags
+      attr_accessor :sender_id, :radio_data, :rorg, :flags, :status
       
       def initialize(data, optional_data)
         super(Radio.packet_type, data, optional_data)
+        self.sender_id = [ 0xff, 0xff, 0xff, 0xff ]
+        self.status = 0
+      end
+      
+      def build_data
+        raise "This needs to be defined by the subclass"
       end
       
       def content
@@ -40,10 +46,10 @@ module Enocean
         s =<<-EOT
         **** Received at: #{Time.now} ******
         **** Data ****
-        Choice          : 0x#{@rorg.to_s(16)}
-        Data            : 0x#{@radio_data.flatten.collect{ |d| d.to_s(16) }.join("-")}
-        Sender ID       : 0x#{@sender_id.to_s(16)}
-        Status          : 0x#{@status.to_s(16)}
+        Choice          : 0x#{rorg.to_s(16)}
+        Data            : 0x#{radio_data.flatten.collect{ |d| d.to_s(16) }.join("-")}
+        Sender ID       : 0x#{sender_id.collect{ | i| i.to_s(16)}.join(":")}
+        Status          : 0x#{status.to_s(16)}
         **** Optional Data ****
         EOT
         return s

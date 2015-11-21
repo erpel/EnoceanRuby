@@ -19,6 +19,7 @@ module Enocean
       def self.from_data(data, optional_data = [])
         Rps.new.from_data(data, optional_data)
       end
+      
       def from_data(data, optional_data = [])
         @radio_data = data[1..1]
         @sender_id = data[2..5].pack("C*").unpack("N").first
@@ -31,19 +32,22 @@ module Enocean
         self
       end
       
+      attr_accessor :flags
+      
       def initialize
-        super([ 0 ], [])
+        super([  ], [])
+        self.radio_data = [ 0 ]
+        self.rorg = Rps.rorg
         @flags = { :t21 => 1, :nu => 0 }
       end
 
       def build_data
-        @data = ([ self.rorg ] + [ @radio_data ] + @sender_id + [ @flags[:t21] >> 5 | @flags[:nu] >> 4 ]).flatten
+        @data = ([ self.rorg ] + [ self.radio_data ] + self.sender_id + [ self.flags[:t21] >> 5 | self.flags[:nu] >> 4 ]).flatten
       end
       
       def rps_data
         radio_data.first
       end
-      
       
       def action1
         Rps.buttons[rps_data >> 5]
@@ -60,7 +64,7 @@ module Enocean
         
       def to_s
         if ! @flags[:nu].zero? && ! @flags[:t21].zero?
-          "Rocker@#{sender_id}: Action1 #{action1} , Action2: #{action2}" 
+          "Rocker@#{sender_id}: Action1 #{action1} " 
         else
           "Rocker@#{sender_id}: released (#{radio_data})"
         end
