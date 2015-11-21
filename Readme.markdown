@@ -15,8 +15,7 @@ Install Gems:
  * bundle install
 
 
-~~ 
-Run it with:
+~~ Run it with: ~~
  * bundle exec ./main.rb
 ~~
 
