@@ -12,13 +12,12 @@ serial = SerialPort.new(serial_port, 57600)
 writer = Enocean::Writer.new(serial)
 reader = Enocean::Reader.new(serial)
 writer.write_packet packet
+base_id = reader.read_packet.as_read_id_response.base_id
+puts "BaseID of TM300 is #{base_id.collect { |s| s.to_s(16)}.join(":")}"
 puts "Starting reading..."
 loop do
   begin
     packet = reader.read_packet
-    if packet.respond_to? :as_ptm200
-      puts "Packet: #{packet.as_ptm200.to_s}"
-    end
   rescue => e
     puts "Error #{e.message}"
     puts e.backtrace.join("\n")
