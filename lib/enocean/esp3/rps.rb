@@ -1,55 +1,70 @@
 # RPS Telegram message
 # Contains only one byte of data
 # RORG = 0xf6
+# Will perform like a PT200 switch
+# pressed => F6-02-01 first part (T21, NU are 1)
+# not pressed => F6-02-01 second part (T21 is 1, NU is 0)
 module Enocean
   module Esp3
     class Rps < Radio
       
-      class << self
-        def rorg
-          0xf6
-        end
-        
-        def create
-          Radio.new()
-        end
+      def self.buttons
+        [ :a1, :a0, :b1, :b0 ]
+      end
+      
+      def self.rorg
+        0xf6
+      end
+      
+      def self.from_data(data, optional_data = [])
+        Rps.new.from_data(data, optional_data)
+      end
+      def from_data(data, optional_data = [])
+        @radio_data = data[1..1]
+        @sender_id = data[2..5].pack("C*").unpack("N").first
+        @status = data[-1]
+        @subTelNum,  @destId,  @dBm,  @securityLevel = optional_data.pack("C*").unpack("BNBB") #struct.unpack('>BIBB',  str(self.optional_data))
+        @repeatCount = @status & 0x0F
+        @repeatCount = @status & 0x0F
+        # T21 and NU flags as tuple
+        @flags = {:t21 => (@status >> 5) & 0x01, :nu => (@status >> 4) & 0x01 }
+        self
+      end
+      
+      def initialize
+        super([ 0 ], [])
+        @flags = { :t21 => 1, :nu => 0 }
+      end
+
+      def build_data
+        @data = ([ self.rorg ] + [ @radio_data ] + @sender_id + [ @flags[:t21] >> 5 | @flags[:nu] >> 4 ]).flatten
       end
       
       def rps_data
         radio_data.first
       end
       
-      def as_ptm200
-        self.extend PTM200
-        self
-      end
-    end
-
-    module PTM200
-      def self.buttons
-        [ :a1, :a0, :b1, :b0 ]
-      end
       
       def action1
-        PTM200.buttons[rps_data >> 5]
+        Rps.buttons[rps_data >> 5]
       end
 
       def action2
-        PTM200.buttons[(rps_data >> 1) & 0b111] if ! ( rps_data & 1 ).zero?
+        raise "Second action not supported"
       end
-
+      
+      # second action not supported for sending currently
+      def action1=(value)
+        @radio_data = [ (Rps.buttons.index(value) << 5) | ( 1 << 4 )]
+      end
+        
       def to_s
-        if ! flags[:nu].zero? && ! flags[:t21].zero?
+        if ! @flags[:nu].zero? && ! @flags[:t21].zero?
           "Rocker@#{sender_id}: Action1 #{action1} , Action2: #{action2}" 
         else
           "Rocker@#{sender_id}: released (#{radio_data})"
         end
       end
-      
-      # def self.pressed(sender_id, button)
-      #   result = PTM200.new( [0x00] )
-      #   result.sender_id = sender_id
-      # end
     end
   end
 end

@@ -4,7 +4,7 @@ module Enocean
       class << self
         def from_data(packet_type, data, optional_data = [])
           case packet_type
-            when 0x01 then RadioFactory.from_data(data, optional_data)
+            when 0x01 then Radio.from_data(data, optional_data)
             when 0x02 then Response.from_data(data, optional_data)
             else BasePacket.from_data(packet_type, data, optional_data)
           end

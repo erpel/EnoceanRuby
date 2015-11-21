@@ -2,19 +2,6 @@
 module Enocean
   module Esp3
 
-      class Rps < Radio
-    
-      def self.rorg
-          return 0xf6
-        end
-
-      def self.from_data(data, sender_id, status, optional_data = [])
-        array = [rorg, data] + sender_id + [status]
-        return Radio.from_data(array, optional_data)
-      end
-
-      end
-
       class Fourbs < Radio
     
       def self.rorg
