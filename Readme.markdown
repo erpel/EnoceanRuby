@@ -1,25 +1,16 @@
-Prepare your Raspberry PI
-=========================
 
 Install 
 --------
  * ruby
  * git
- * sqlite3
- * ruby-dev
- * libsqlite3-dev
 
 Install Gems:
 -------------
  * gem install bundler
  * bundle install
+ 
+The file main.rb is kept here for reference if you would like to run the packet reading/writing in event machine. I just used it for testing the enocean packets with my actors before then trying to do the same thing in openHAB.
 
-
-~~ Run it with: ~~
- * bundle exec ./main.rb
-~~
-
-Note: haven't tested above methods, they might not work any more for the current code base
 
 Reading the base ID from your TM300
 -----------------------------------
