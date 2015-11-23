@@ -35,7 +35,7 @@ serial = SerialPort.new(serial_port, 57600)
 writer = Enocean::Writer.new(serial)
 reader = Enocean::Reader.new(serial)
 
-dimmer = Dimmer.new(writer, [ 0xFF, 0xFC, 0x01, 0x82 ])
+dimmer = Dimmer.new(writer, [ 0xFF, 0xFC, 0x01, 0x83 ])
 debugger
 puts "Finished"
 
