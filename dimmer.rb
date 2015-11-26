@@ -3,6 +3,7 @@
 require "./lib/enocean"
 require 'serialport'
 require 'byebug'
+require "./config"
 
 # Example for a dimmer telegram for the FUD61NPN Eltako aktor
 # Information on the dimmer telegram was taken out of
@@ -30,12 +31,11 @@ end
 
 
 
-serial_port = "/dev/tty.usbserial-FTVJ62G0"
-serial = SerialPort.new(serial_port, 57600)
+serial = SerialPort.new(@serial_port, 57600)
 writer = Enocean::Writer.new(serial)
 reader = Enocean::Reader.new(serial)
 
-dimmer = Dimmer.new(writer, [ 0xFF, 0xFC, 0x01, 0x83 ])
+dimmer = Dimmer.new(writer, [ 0xFF, 0xab, 0xf7, 0x82 ])
 debugger
 puts "Finished"
 
