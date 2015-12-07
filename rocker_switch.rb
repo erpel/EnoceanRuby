@@ -3,6 +3,9 @@
 require "./lib/enocean"
 require 'serialport'
 require 'byebug'
+require './config'
+
+@switch_address = [ 0xff, 0xab, 0xf7, 0x83 ]
 
 # Example for a PTM200 switch running a FUD61NPN Eltako aktor
 # on telegrams are of the style first 3 bits which button was pressed, and then the 4th bit set to 1
@@ -52,12 +55,11 @@ end
 
 
 
-serial_port = "/dev/tty.usbserial-FTVJ62G0"
-serial = SerialPort.new(serial_port, 57600)
+serial = SerialPort.new(@serial_port, 57600)
 writer = Enocean::Writer.new(serial)
 reader = Enocean::Reader.new(serial)
 
-switch = Switch.new(writer, [ 0xFF, 0xFC, 0x01, 0x81 ])
+switch = Switch.new(writer, @switch_address) 
 debugger
 puts "Finished"
 

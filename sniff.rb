@@ -7,6 +7,7 @@ require "./config"
 
 packet = Enocean::Esp3::ReadIdBase.create
 
+puts "Using #{@serial_port}"
 serial = SerialPort.new(@serial_port, 57600)
 writer = Enocean::Writer.new(serial)
 reader = Enocean::Reader.new(serial)
