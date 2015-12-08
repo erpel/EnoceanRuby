@@ -8,8 +8,9 @@ require './config'
 @switch_address = [ 0xff, 0xab, 0xf7, 0x83 ]
 
 # Example for a PTM200 switch running a FUD61NPN Eltako aktor
-# on telegrams are of the style first 3 bits which button was pressed, and then the 4th bit set to 1
-# the off telegrams are of the second style: first 3 bits how many buttons are pressed, then 0
+# Using Enocean F6-02-01 protocol
+# "ON" telegrams are of the first variant:  3 bits which button was pressed, and then the 4th bit set to 1
+# the off telegrams are of the second variant: first 3 bits how many buttons are pressed, then 0
 # there is no teach in mode for PTM200, just put the dimmer into teach mode and run "on"
 class Switch
   def initialize(writer, sender_id)
@@ -41,6 +42,14 @@ class Switch
     decrease(0.2)
   end
   
+  def up_press
+    @writer.write_packet(@b0_on)
+  end
+  
+  def release_all
+    @writer.write_packet(@b0_off)
+  end
+
   def increase(time)
     @writer.write_packet(@b0_on)
     sleep(time)

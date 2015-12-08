@@ -36,6 +36,10 @@ Setting dimming values for a Eltak FUD61NPN with A5-38-08 CMD2
  * set the dimmer back to normal
  * now you can go with dimmer.set(xxx)
 
+Making a FSR61NP switch turn on
+-------------------------------
+ * goal was to have the switch turn the lights on (motion sensor with OpenHAB etc.) and after some time it will turn off
+ * it was sufficient to teach in the "Zentralein" as rocker switch by pressing "up". For remote activation a up_press message was enough (no release needed)
 
 Links
 -----
