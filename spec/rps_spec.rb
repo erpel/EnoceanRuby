@@ -48,9 +48,11 @@ describe Enocean::Esp3::Rps do
   it "should be able to create a packet from scratch " do
     packet = Enocean::Esp3::Rps.new
     packet.action1 = :b1
+    packet.flags[:nu] = 1
     packet.build_data
     expect(packet.radio_data.size).to eq(1)
     packet.radio_data.first.should == 0b01010000
+    packet.release?.should_not == true
     packet.serialize
   end
   
@@ -59,6 +61,8 @@ describe Enocean::Esp3::Rps do
     packet.build_data
     expect(packet.radio_data.size).to eq(1)
     packet.radio_data.first.should == 0
+    puts packet.inspect
+    packet.release?.should == true
     packet.serialize
   end
 end
