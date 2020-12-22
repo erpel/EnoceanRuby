@@ -42,6 +42,7 @@ describe Enocean::Esp3::Rps do
   it "should construct a PTM200 package " do
     pending "Constructing a PTM200 package"
     packet = Enocean::Esp3::Radio.from_data( [ 0x00 ] )
+    packet.should_not be_nil
   end
   
   it "should be able to create a packet from scratch " do
