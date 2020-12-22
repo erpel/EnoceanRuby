@@ -61,7 +61,11 @@ module Enocean
       def action1=(value)
         @radio_data = [ (Rps.buttons.index(value) << 5) | ( 1 << 4 )]
       end
-        
+
+      def release?
+        @flags[:nu].zero?
+      end
+
       def to_s
         if ! @flags[:nu].zero? && ! @flags[:t21].zero?
           "Rocker@#{sender_id}: Action1 #{action1} " 
