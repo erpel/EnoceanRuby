@@ -4,6 +4,6 @@ if `uname -a`.include?("Linux")
   @serial_port = "/dev/ttyAMA0"
 else
   # Mac Serial port for USB stick
-  @serial_port = "/dev/tty.usbserial-FTVJ62G0"
+  @serial_port = "/dev/tty.usbserial-FT41KJ2Y"
 end
 
